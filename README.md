@@ -64,28 +64,39 @@ regardless, so a bad or missing upstream can never break the app.
 
 ### One-time setup
 
-Unattended `wrangler` has no terminal, so it cannot use the interactive
-`wrangler login` token — it needs a scoped **API token**:
+**API token.** Unattended `wrangler` has no terminal, so it needs a scoped
+**API token** rather than the interactive `wrangler login`. In the Cloudflare
+dashboard: **My Profile → API Tokens → Create Token → Create Custom Token**, with
+the single permission **Account → Cloudflare Pages → Edit**, scoped to the one
+account.
 
-1. Cloudflare dashboard → **My Profile → API Tokens → Create Token → Create
-   Custom Token**.
-2. Permission: **Account → Cloudflare Pages → Edit** (nothing else). Scope it to
-   the one account.
-3. Save the token string to
-   `~/Documents/build_app/car-video/keys/cloudflare-pages.token`
-   (`chmod 600`, outside every repo, like the signing key).
+**Working copy.** macOS blocks background (launchd) jobs from reading
+`~/Documents` (TCC), so the scheduled job runs from a clone under `~/Library`,
+with the signing key and token in a `keys` directory beside it:
+
+```sh
+BASE="$HOME/Library/Application Support/autovibe-sync"
+mkdir -p "$BASE/keys"
+git clone https://github.com/Jackerha1/AutoVibeAds.git "$BASE/AutoVibeAds"
+cp "$HOME/Documents/build_app/car-video/keys/autovibe-filters-signing.key" "$BASE/keys/"
+printf '%s' '<PAGES_API_TOKEN>' > "$BASE/keys/cloudflare-pages.token"
+chmod 600 "$BASE/keys/"*
+```
+
+The script resolves the key and token from the `keys` directory next to its own
+repo, so a manual `bash tools/sync-upstream.sh` run from the `~/Documents`
+checkout uses `~/Documents/build_app/car-video/keys` instead, with no edits.
 
 Install / control the schedule:
 
 ```sh
-cp tools/biz.autovibe.filter-sync.plist ~/Library/LaunchAgents/
+cp "$BASE/AutoVibeAds/tools/biz.autovibe.filter-sync.plist" ~/Library/LaunchAgents/
 launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/biz.autovibe.filter-sync.plist
 launchctl kickstart -k gui/$(id -u)/biz.autovibe.filter-sync   # run once now
 launchctl bootout gui/$(id -u)/biz.autovibe.filter-sync        # stop the schedule
 ```
 
-Logs: `~/Library/Logs/autovibe-filter-sync.log`. Run by hand any time with
-`bash tools/sync-upstream.sh`.
+Logs: `~/Library/Logs/autovibe-filter-sync.log`.
 
 ## Provenance
 

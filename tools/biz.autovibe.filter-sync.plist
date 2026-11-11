@@ -5,10 +5,12 @@
   <key>Label</key>
   <string>biz.autovibe.filter-sync</string>
 
+  <!-- Runs from a working copy under ~/Library because macOS blocks background
+       jobs from reading ~/Documents (TCC). See README, "Filter sync". -->
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
-    <string>/Users/huytk/Documents/build_app/car-video/AutoVibeAds/tools/sync-upstream.sh</string>
+    <string>/Users/huytk/Library/Application Support/autovibe-sync/AutoVibeAds/tools/sync-upstream.sh</string>
   </array>
 
   <!-- Every 7 hours. launchd coalesces a missed interval into one run on wake. -->
@@ -19,7 +21,7 @@
   <false/>
 
   <key>WorkingDirectory</key>
-  <string>/Users/huytk/Documents/build_app/car-video/AutoVibeAds</string>
+  <string>/tmp</string>
 
   <key>StandardOutPath</key>
   <string>/Users/huytk/Library/Logs/autovibe-filter-sync.log</string>

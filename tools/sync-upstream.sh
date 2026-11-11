@@ -14,17 +14,18 @@ set -euo pipefail
 export PATH="/usr/local/bin:/opt/homebrew/bin:/opt/homebrew/opt/node@24/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export GIT_TERMINAL_PROMPT=0 WRANGLER_SEND_METRICS=false
 
-# Cloudflare auth for unattended wrangler. A launchd job never has a terminal,
-# so wrangler cannot use (or refresh) the interactive `wrangler login` token and
-# requires a scoped API token instead. The token lives beside the signing key,
-# outside every repo. Create it in the Cloudflare dashboard with the single
-# permission Account > Cloudflare Pages > Edit, then save it to this file.
-CF_TOKEN_FILE="$HOME/Documents/build_app/car-video/keys/cloudflare-pages.token"
+# Cloudflare account for unattended wrangler, which needs a scoped API token
+# (not the interactive `wrangler login`) because a launchd job has no terminal.
 export CLOUDFLARE_ACCOUNT_ID="dee492a69616e5dd114bebe866c5bc29"
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FILTERS="$REPO/site/filters"
-KEY="$HOME/Documents/build_app/car-video/keys/autovibe-filters-signing.key"
+# Signing key and Cloudflare token live in a `keys` directory beside the repo,
+# so this runs unchanged from the manual checkout under ~/Documents and from the
+# launchd working copy under ~/Library (which macOS lets a background job read).
+KEYS_DIR="$(cd "$REPO/.." && pwd)/keys"
+KEY="$KEYS_DIR/autovibe-filters-signing.key"
+CF_TOKEN_FILE="$KEYS_DIR/cloudflare-pages.token"
 UPSTREAM="https://dashtvfilters.everinfinite.co"
 LIVE="https://autovibe.biz/filters"
 PAGES_PROJECT="autovibe"
@@ -84,6 +85,13 @@ trap cleanup EXIT
 CLOUDFLARE_API_TOKEN="$(tr -d ' \t\r\n' < "$CF_TOKEN_FILE")"
 export CLOUDFLARE_API_TOKEN
 [ -n "$CLOUDFLARE_API_TOKEN" ] || fail "Cloudflare API token file is empty: $CF_TOKEN_FILE"
+
+# Keep this working copy current with the remote without clobbering local edits,
+# so the launchd clone and a manual checkout do not drift. Best-effort only.
+if [ -z "$(git -C "$REPO" status --porcelain 2>/dev/null)" ]; then
+    git -C "$REPO" fetch --quiet origin main 2>/dev/null \
+        && git -C "$REPO" merge --ff-only --quiet origin/main 2>/dev/null || true
+fi
 
 # 1. Upstream manifest. Plain unreachability is the quiet offline case.
 if ! curl --proto '=https' -fsS --retry 2 --max-time 60 --max-filesize 65536 \
