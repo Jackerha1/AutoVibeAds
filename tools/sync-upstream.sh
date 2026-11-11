@@ -47,6 +47,10 @@ live_matches() {
 
 deploy_and_verify() {
     log "deploying site to Cloudflare Pages"
+    # Give wrangler a writable cache inside the repo. Without a local
+    # node_modules it walks up and tries ~/node_modules/.cache, which is
+    # root-owned and fails with EACCES. This dir is gitignored.
+    mkdir -p "$REPO/node_modules/.cache" 2>/dev/null || true
     (cd "$REPO" && wrangler pages deploy site --project-name "$PAGES_PROJECT" \
         --branch main --commit-dirty=true) >"$WORK/deploy.log" 2>&1 \
         || { tail -5 "$WORK/deploy.log" || true; fail "wrangler deploy failed (check the Cloudflare API token)"; }
