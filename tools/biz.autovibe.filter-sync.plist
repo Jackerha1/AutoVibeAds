@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>biz.autovibe.filter-sync</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/huytk/Documents/build_app/car-video/AutoVibeAds/tools/sync-upstream.sh</string>
+  </array>
+
+  <!-- Every 7 hours. launchd coalesces a missed interval into one run on wake. -->
+  <key>StartInterval</key>
+  <integer>25200</integer>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/huytk/Documents/build_app/car-video/AutoVibeAds</string>
+
+  <key>StandardOutPath</key>
+  <string>/Users/huytk/Library/Logs/autovibe-filter-sync.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/huytk/Library/Logs/autovibe-filter-sync.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>
